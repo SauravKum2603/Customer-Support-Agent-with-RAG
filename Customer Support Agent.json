@@ -1,0 +1,409 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Welcome to Spice Court! 🌶️✨\nWe're delighted to serve you. Whether you'd like to place an order, check menu availability, make a reservation, explore our catering services, or learn about our policies, I'm here to help.\n\nHow can I assist you today? 🍽️",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -992,
+        -288
+      ],
+      "id": "a1e42756-2a83-48d6-b81e-2d219fd99c32",
+      "name": "When chat message received",
+      "webhookId": "d4b8bde0-d62e-4ece-8327-e49130201e88"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a Customer Support Agent for Spice Court Restaurant.\nFollow the rules below:\nKeep answers concise: \nEnsure your responses are short and strictly limited to the action requested by the user. Do not display any additional or unnecessary information.\nMenu and Inventory: Use the \"Get Inventory\" tool to fetch all inventory details. \nWhen a user asks for the menu, display only the Item and Price columns in a cleanly formatted table.Order Placement: Use the \"Place Order\" tool to take orders from the user. \nYou must extract and fill in order details like Name, Item, and Quantity from the user's message into the orders sheet.\nIf any required data (Name, Item, or Quantity) is missing, politely ask the customer to provide it.\nIf an item is out of stock (quantity is 0).\nAlways provide a confirmation message after an order is successfully placed.\nInventory Updates: After placing every order, use the \"Update Inventory\" tool to update the item's quantity in the Inventory Sheet. For example, if the initial quantity of an item is $X$ and the customer orders 10 plates, the final quantity updated must be X - 10.\nPolicies and FAQs: Use the \"Get Policies from RAG\" tool to answer all customer queries related to policies or FAQs."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -496,
+        -288
+      ],
+      "id": "aabbdfb3-2ab4-49c3-b181-d2bdf91fc7ab",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -944,
+        -16
+      ],
+      "id": "e03c12bd-5fa0-4e3f-b678-9a8453a39d4a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KHSuygSZnT28qyRH",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        -624,
+        0
+      ],
+      "id": "3d3f1130-56a3-4c35-90ed-39ae0d3d3acd",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://prod-1-data.ke.pinecone.io/assistant/chat/spicecourt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Api-Key",
+              "value": "pcsk_hjDqd_BYLdxRruVgysUxvKDanwW7rTJiT3MYxR5Hu5L6RjXMQK9oa2ZEqwhoGXzA8Mb2n"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"{{ $fromAI('searchQuery') }}\"\n    }\n  ],\n  \"stream\": false,\n  \"model\": \"gpt-4o\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        -176
+      ],
+      "id": "8a7bdf59-6afd-48e2-a522-625b08d662eb",
+      "name": "Get Policies From Rag"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc",
+          "mode": "list",
+          "cachedResultName": "Spice Court Master Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        -96
+      ],
+      "id": "4b08d1ec-9e0c-4372-9436-ded68e0ff341",
+      "name": "Get Inventory",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4CZ8JtIS8BSMwfEp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc",
+          "mode": "list",
+          "cachedResultName": "Spice Court Master Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1829021310,
+          "mode": "list",
+          "cachedResultName": "Orders",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc/edit#gid=1829021310"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Name', ``, 'string') }}",
+            "Item": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Item', ``, 'string') }}",
+            "Quantity": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Quantity', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Item",
+              "displayName": "Item",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -112,
+        -32
+      ],
+      "id": "5e412b59-9bfe-472b-9109-f7d67e443868",
+      "name": "Place Order",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4CZ8JtIS8BSMwfEp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc",
+          "mode": "list",
+          "cachedResultName": "Spice Court Master Dashboard",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Inventory",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SAHr9G26qzgHpQ5qzWoOOhFixjId1jF182ql9ygzxZc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Item": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Item__using_to_match_', ``, 'string') }}",
+            "Quantity": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Quantity', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "Item"
+          ],
+          "schema": [
+            {
+              "id": "Item",
+              "displayName": "Item",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Price (₹)",
+              "displayName": "Price (₹)",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -288,
+        -32
+      ],
+      "id": "6f1fed03-4e41-42b7-a50c-91e86a2fd2b8",
+      "name": "Update Inventory",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "4CZ8JtIS8BSMwfEp",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -784,
+        -256
+      ],
+      "id": "9a5e41f3-6a7a-4dd8-9fc6-544aaf42b27b",
+      "name": "Wait",
+      "webhookId": "c3f0c37f-143e-4614-82ab-911e85d47392"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Policies From Rag": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Inventory": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Place Order": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Inventory": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2f48737c-fbe5-44e5-bf34-84800cff00a9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a2acea927fa144d3e33d2b77b1521fa8fd770b3453dfb5f8ac388c5dfcc845e9"
+  },
+  "nodeGroups": [],
+  "id": "RZzNIa4qpmcOWoQY",
+  "tags": []
+}
