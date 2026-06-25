@@ -1,5 +1,5 @@
 # 🤖 AI Customer Support Agent with RAG & Inventory Automation
-An enterprise-grade Customer Support Assistant built using **n8n** and **LangChain**. This workflow leverages **Retrieval-Augmented Generation (RAG)** via a custom vector API endpoint alongside relational databases to handle policy queries, log e-commerce orders, and dynamically update inventory management systems without hardcoded branching logic.
+An enterprise-grade Customer Support Assistant built using **n8n**. This workflow leverages **Retrieval-Augmented Generation (RAG)** via a custom vector API endpoint alongside relational databases to handle policy queries, log e-commerce orders, and dynamically update inventory management systems without hardcoded branching logic.
 
 ---
 
@@ -25,7 +25,7 @@ An enterprise-grade Customer Support Assistant built using **n8n** and **LangCha
 As shown on the n8n canvas:
 1. **When chat message received:** The conversational front-end trigger capturing user messages.
 2. **Wait Node:** Acts as a buffer to pace executions and manage incoming API payloads gracefully.
-3. **AI Agent (LangChain):** The brain that parses prompt logic, tracks thoughts, and selects tools.
+3. **AI Agent :** The brain that parses prompt logic, tracks thoughts, and selects tools.
 4. **Google Gemini Chat Model:** Advanced language intelligence handling logical execution and text formatting.
 5. **Simple Memory:** Tracks session data across chat interactions to preserve contextual state.
 6. **Connected Semantic Sub-Tools (The Agent's Hands):**
